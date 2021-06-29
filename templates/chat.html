@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/styles.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js" integrity="sha512-iZIBSs+gDyTH0ZhUem9eQ1t4DcEn2B9lHxfRMeGQhyNdSUz+rb+5A3ummX6DQTOIs1XK0gOteOg/LPtSo9VJ+w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket;
+        $(document).ready(function(){
+            socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+            socket.on('connect', function() {
+                socket.emit('join', {});
+            });
+            socket.on('status', function(data) {
+                $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
+                $('#chat').scrollTop($('#chat')[0].scrollHeight);
+            });
+            socket.on('message', function(data) {
+                $('#chat').val($('#chat').val() + data.msg + '\n');
+                $('#chat').scrollTop($('#chat')[0].scrollHeight);
+            });
+            $('#send').click(function(e) {
+                    text = $('#text').val();
+                    $('#text').val('');
+                    socket.emit('text', {msg: text});
+            });
+        });
+        function leave_room() {
+            socket.emit('left', {}, function() {
+                socket.disconnect();
+                // go back to the login page
+                window.location.href = "{{ url_for('home') }}";
+            });
+        }
+    </script>
+    <title>Room</title>
+</head>
+<body>
+    <div class="chatWindow">
+        <h1>Socket <span style="color: white;">Chat</span></h1>
+        <h2>Room : <span style="color: white;">{{ session['room'] }}</span></h2>
+        <textarea name="chat" id="chat" cols="70" rows="10" placeholder="No messages yet ..."></textarea>
+        <input type="text" id="text" size="60" placeholder="Type the message here ...">
+        <div>
+            <button class="secondaryBtn" id="send" type="button">Send</button>
+            <button class="secondaryBtn" type="button" onClick=leave_room()>Leave Room</button>
+        </div>
+        
+    </div>
+</body>
+</html>
